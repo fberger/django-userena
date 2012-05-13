@@ -1,0 +1,2 @@
+{% load i18n %}
+{% blocktrans with site.name as site %}{{ promoter.first_name }} invited you to join {{ site }}.{% endblocktrans %}

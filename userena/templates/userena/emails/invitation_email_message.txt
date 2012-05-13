@@ -1,0 +1,12 @@
+{% load i18n %}{% autoescape off %}
+{% blocktrans with site.name as site %}Your friend {{promoter.first_name}} is using {{ site }} and invited you to join him.{% endblocktrans %}
+
+{% trans "To activate your account you should click on the link below:" %}
+
+{{ protocol }}://{{ site.domain }}{% url userena_activate_invite user.username activation_key %}
+
+{% trans "Thanks for using our site!" %}
+
+{% trans "Sincerely" %},
+{{ site.name }}
+{% endautoescape %}

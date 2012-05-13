@@ -13,7 +13,7 @@ from django.views.generic import list_detail
 from django.http import HttpResponseForbidden, Http404
 
 from userena.forms import (SignupForm, SignupFormOnlyEmail, AuthenticationForm,
-                           ChangeEmailForm, EditProfileForm)
+                           ChangeEmailForm, EditProfileForm, ActivateInviteForm)
 from userena.models import UserenaSignup
 from userena.decorators import secure_required
 from userena.backends import UserenaAuthenticationBackend
@@ -146,6 +146,70 @@ def activate(request, username, activation_key,
         return direct_to_template(request,
                                   template_name,
                                   extra_context=extra_context)
+
+@secure_required
+def activate_invite(request, username, activation_key,
+                    template_name='userena/activate_invite.html',
+                    template_name_fail='userena/activate_invite_fail.html',
+                    success_url=None, extra_context={},
+                    redirect_to='/'):
+    """
+    Activate a user with an activation key who received an invitation.
+
+    The key is a SHA1 string. When the SHA1 is found with an
+    :class:`UserenaSignup`, the :class:`User` of that account will be
+    activated.  After a successfull activation the view will redirect to
+    ``succes_url``.  If the SHA1 is not found, the user will be shown the
+    ``template_name`` template displaying a fail message.
+
+    :param username:
+        String of the username that wants to be activated.
+
+    :param activation_key:
+        String of a SHA1 string of 40 characters long. A SHA1 is always 160bit
+        long, with 4 bits per character this makes it --160/4-- 40 characters
+        long.
+
+    :param template_name:
+        String containing the template name that is used when the
+        ``activation_key`` is invalid and the activation failes. Defaults to
+        ``userena/activation_fail.html``.
+
+    :param success_url:
+        String containing the URL where the user should be redirected to after
+        a succesfull activation. Will replace ``%(username)s`` with string
+        formatting if supplied. If ``success_url`` is left empty, will direct
+        to ``userena_profile_detail`` view.
+
+    :param extra_context:
+        Dictionary containing variables which could be added to the template
+        context. Default to an empty dictionary.
+
+    """
+    userena = get_object_or_404(UserenaSignup, user__username=username,
+                                activation_key=activation_key)
+    invitee = userena.user
+    extra_context['invitee'] = invitee
+    if invitee.is_active:
+            extra_context['error'] = 'User already activated.'
+            return direct_to_template(request, template_name_fail, extra_context)
+
+    if request.method == 'GET':
+        form = ActivateInviteForm(initial={'username': username,
+                                           'activation_key': activation_key})
+        extra_context['form'] = form
+        return direct_to_template(request, template_name, extra_context)
+
+    form = ActivateInviteForm(request.POST)
+    if not form.is_valid():
+        extra_context['form'] = form
+        return direct_to_template(request, template_name, extra_context)
+
+    user = form.save()
+    auth_user = authenticate(identification=user.email,
+                             check_password=False)
+    login(request, auth_user)
+    return redirect(redirect_to)
 
 @secure_required
 def email_confirm(request, username, confirmation_key,

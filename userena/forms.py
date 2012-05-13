@@ -14,6 +14,37 @@ attrs_dict = {'class': 'required'}
 
 USERNAME_RE = r'^[\.\w]+$'
 
+class ActivateInviteForm(forms.Form):
+    username = forms.CharField(max_length=30, widget=forms.HiddenInput)
+    activation_key = forms.CharField(max_length=40, widget=forms.HiddenInput)
+    password1 = forms.CharField(widget=forms.PasswordInput(attrs=attrs_dict,
+                                                           render_value=False),
+                                label=_("Create password"))
+    password2 = forms.CharField(widget=forms.PasswordInput(attrs=attrs_dict,
+                                                           render_value=False),
+                                label=_("Repeat password"))
+    def clean(self):
+        if 'username' in self.cleaned_data and 'activation_key' in self.cleaned_data:
+            try:
+                self.userena = UserenaSignup.objects.get(user__username=self.cleaned_data['username'],
+                                                 activation_key=self.cleaned_data['activation_key'])
+                if self.userena.user.is_active:
+                    raise forms.ValidationError(_('User already active.'))
+            except UserenaSignup.DoesNotExist:
+                raise forms.ValidationError(_('Invalid invitation code.'))
+
+        if 'password1' in self.cleaned_data and 'password2' in self.cleaned_data:
+            if self.cleaned_data['password1'] != self.cleaned_data['password2']:
+                raise forms.ValidationError(_('The two password fields didn\'t match.'))
+        return self.cleaned_data
+
+    def save(self):
+        user = self.userena.user
+        user.is_active = True
+        user.set_password(self.cleaned_data['password1'])
+        user.save()
+        return user
+
 class SignupForm(forms.Form):
     """
     Form for creating a new user account.

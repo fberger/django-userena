@@ -1,0 +1,10 @@
+{% extends 'userena/base_userena.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "User already active." %}{% endblock %}
+{% block content_title %}<h2>{% trans "You are already an active user" %}</h2>{% endblock %}
+
+{% block content %}
+<p>{% trans "Your account could not be activated. This could be because your activation link has aged." %}</p>
+<p>{% trans "Please try signing up again or contact us if you think something went wrong." %}</p>
+{% endblock %}

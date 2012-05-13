@@ -175,7 +175,7 @@ class UserenaSignup(models.Model):
         """
         Sends a activation email to the user.
 
-        This email is send when the user wants to activate their newly created
+        This email is sent when the user wants to activate their newly created
         user.
 
         """
@@ -191,6 +191,32 @@ class UserenaSignup(models.Model):
         subject = ''.join(subject.splitlines())
 
         message = render_to_string('userena/emails/activation_email_message.txt',
+                                   context)
+        send_mail(subject,
+                  message,
+                  settings.DEFAULT_FROM_EMAIL,
+                  [self.user.email,])
+
+    def send_invite_email(self, promoter):
+        """
+        Sends a invitation email to the user.
+
+        This email is sent when a user invites another user to to join.
+
+        """
+        context = {'user': self.user,
+                   'promoter': promoter,
+                   'without_usernames': userena_settings.USERENA_WITHOUT_USERNAMES,
+                   'protocol': get_protocol(),
+                   'activation_days': userena_settings.USERENA_ACTIVATION_DAYS,
+                   'activation_key': self.activation_key,
+                   'site': Site.objects.get_current()}
+
+        subject = render_to_string('userena/emails/invitation_email_subject.txt',
+                                   context)
+        subject = ''.join(subject.splitlines())
+
+        message = render_to_string('userena/emails/invitation_email_message.txt',
                                    context)
         send_mail(subject,
                   message,

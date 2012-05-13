@@ -1,0 +1,27 @@
+{% extends 'userena/base_userena.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Activate your account." %}{% endblock %}
+{% block content_title %}<h2>{% trans "Pick a password and be on your way." %}</h2>{% endblock %}
+
+{% block content %}
+  <form action="" method="post">
+    {% csrf_token %}
+    <fieldset>
+      <legend>{% trans "Signup" %}</legend>
+      {{ form.non_field_errors }}
+      {% for field in form %}
+        {% if field.is_hidden %}
+	  {{field}}
+	{% else %}
+	  {{ field.errors }}
+	  <p>
+	    {{ field.label_tag }} 
+	    {{ field }}
+	  </p>
+	{% endif %}
+      {% endfor %}
+    </fieldset>
+    <input type="submit" value="{% trans "Signup"%}" />
+  </form>
+{% endblock %}

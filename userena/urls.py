@@ -49,6 +49,11 @@ urlpatterns = patterns('',
        userena_views.activate,
        name='userena_activate'),
 
+    # Activate invite
+    url(r'^(?P<username>[\.\w]+)/invite/(?P<activation_key>\w+)/$',
+       userena_views.activate_invite,
+       name='userena_activate_invite'),
+
     # Change email and confirm it
     url(r'^(?P<username>[\.\w]+)/email/$',
        userena_views.email_change,
